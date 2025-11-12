@@ -1,0 +1,246 @@
+Error: Width mismatch on port 'funct7_o' of reference to 'yarp_decode' in 'yarp_top'. (LINK-3)
+Warning: Unable to resolve reference 'yarp_decode' in 'yarp_top'. (LINK-5)
+Information: Updating design information... (UID-85)
+ 
+****************************************
+Report : timing
+        -path full
+        -delay min
+        -max_paths 10
+Design : yarp_top
+Version: Q-2019.12-SP1
+Date   : Tue Nov 11 19:13:22 2025
+****************************************
+
+Operating Conditions: typical   Library: gscl45nm
+Wire Load Model Mode: top
+
+  Startpoint: u_yarp_decode/s_type_instr_o (internal pin)
+  Endpoint: data_mem_wr_o
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  u_yarp_decode/s_type_instr_o (yarp_decode)              0.00       0.00 r
+  u_yarp_control/is_s_type_i (yarp_control)               0.00       0.00 r
+  u_yarp_control/U99/Y (NAND3X1)                          0.02       0.02 f
+  u_yarp_control/U46/Y (BUFX2)                            0.03       0.05 f
+  u_yarp_control/U45/Y (INVX1)                            0.00       0.05 r
+  u_yarp_control/data_wr_o (yarp_control)                 0.00       0.05 r
+  u_yarp_data_mem/data_wr_i (yarp_data_mem)               0.00       0.05 r
+  u_yarp_data_mem/data_mem_wr_o (yarp_data_mem)           0.00       0.05 r
+  data_mem_wr_o (out)                                     0.00       0.05 r
+  data arrival time                                                  0.05
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+  Startpoint: u_yarp_decode/s_type_instr_o (internal pin)
+  Endpoint: data_mem_req_o
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  u_yarp_decode/s_type_instr_o (yarp_decode)              0.00       0.00 r
+  u_yarp_control/is_s_type_i (yarp_control)               0.00       0.00 r
+  u_yarp_control/U99/Y (NAND3X1)                          0.02       0.02 f
+  u_yarp_control/U46/Y (BUFX2)                            0.03       0.05 f
+  u_yarp_control/U98/Y (NAND2X1)                          0.00       0.05 r
+  u_yarp_control/data_req_o (yarp_control)                0.00       0.05 r
+  u_yarp_data_mem/data_req_i (yarp_data_mem)              0.00       0.05 r
+  u_yarp_data_mem/data_mem_req_o (yarp_data_mem)          0.00       0.05 r
+  data_mem_req_o (out)                                    0.00       0.05 r
+  data arrival time                                                  0.05
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+  Startpoint: u_yarp_decode/funct3_o[0] (internal pin)
+  Endpoint: data_mem_byte_en_o[0]
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  u_yarp_decode/funct3_o[0] (yarp_decode)                 0.00       0.00 f
+  u_yarp_control/instr_funct3_i[0] (yarp_control)         0.00       0.00 f
+  u_yarp_control/U61/Y (AND2X1)                           0.04       0.04 f
+  u_yarp_control/U62/Y (INVX1)                            0.01       0.05 r
+  u_yarp_control/U103/Y (OAI21X1)                         0.02       0.07 f
+  u_yarp_control/data_byte_o[0] (yarp_control)            0.00       0.07 f
+  u_yarp_data_mem/data_byte_en_i[0] (yarp_data_mem)       0.00       0.07 f
+  u_yarp_data_mem/data_mem_byte_en_o[0] (yarp_data_mem)
+                                                          0.00       0.07 f
+  data_mem_byte_en_o[0] (out)                             0.00       0.07 f
+  data arrival time                                                  0.07
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+  Startpoint: u_yarp_instr_mem/instr_mem_req_q_reg/CLK
+              (internal path startpoint)
+  Endpoint: instr_mem_req_o
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  input external delay                                    0.00       0.00 r
+  u_yarp_instr_mem/instr_mem_req_q_reg/CLK (DFFSR)        0.00       0.00 r
+  u_yarp_instr_mem/instr_mem_req_q_reg/Q (DFFSR)          0.10       0.10 r
+  u_yarp_instr_mem/instr_mem_req_o (yarp_instr_mem)       0.00       0.10 r
+  instr_mem_req_o (out)                                   0.00       0.10 r
+  data arrival time                                                  0.10
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+  Startpoint: u_yarp_decode/instr_imm_o[1] (internal pin)
+  Endpoint: data_mem_addr_o[1]
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  u_yarp_decode/instr_imm_o[1] (yarp_decode)              0.00       0.00 r
+  U713/Y (MUX2X1)                                         0.02       0.02 f
+  U712/Y (INVX1)                                          0.03       0.04 r
+  u_yarp_execute/opr_b_i[1] (yarp_execute)                0.00       0.04 r
+  u_yarp_execute/U1035/Y (MUX2X1)                         0.04       0.09 r
+  u_yarp_execute/U1022/Y (NAND3X1)                        0.02       0.11 f
+  u_yarp_execute/U565/Y (BUFX2)                           0.04       0.14 f
+  u_yarp_execute/alu_res_o[1] (yarp_execute)              0.00       0.14 f
+  u_yarp_data_mem/data_addr_i[1] (yarp_data_mem)          0.00       0.14 f
+  u_yarp_data_mem/data_mem_addr_o[1] (yarp_data_mem)      0.00       0.14 f
+  data_mem_addr_o[1] (out)                                0.00       0.14 f
+  data arrival time                                                  0.14
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+  Startpoint: pc_q_reg[31]
+              (rising edge-triggered flip-flop)
+  Endpoint: instr_mem_addr_o[31]
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  pc_q_reg[31]/CLK (DFFSR)                                0.00       0.00 r
+  pc_q_reg[31]/Q (DFFSR)                                  0.11       0.11 r
+  U546/Y (BUFX2)                                          0.04       0.15 r
+  u_yarp_instr_mem/instr_mem_pc_i[31] (yarp_instr_mem)
+                                                          0.00       0.15 r
+  u_yarp_instr_mem/instr_mem_addr_o[31] (yarp_instr_mem)
+                                                          0.00       0.15 r
+  instr_mem_addr_o[31] (out)                              0.00       0.15 r
+  data arrival time                                                  0.15
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+  Startpoint: pc_q_reg[1]
+              (rising edge-triggered flip-flop)
+  Endpoint: instr_mem_addr_o[1]
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  pc_q_reg[1]/CLK (DFFSR)                                 0.00       0.00 r
+  pc_q_reg[1]/Q (DFFSR)                                   0.11       0.11 r
+  U538/Y (BUFX2)                                          0.04       0.15 r
+  u_yarp_instr_mem/instr_mem_pc_i[1] (yarp_instr_mem)     0.00       0.15 r
+  u_yarp_instr_mem/instr_mem_addr_o[1] (yarp_instr_mem)
+                                                          0.00       0.15 r
+  instr_mem_addr_o[1] (out)                               0.00       0.15 r
+  data arrival time                                                  0.15
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+  Startpoint: u_yarp_decode/instr_imm_o[18] (internal pin)
+  Endpoint: data_mem_addr_o[18]
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  u_yarp_decode/instr_imm_o[18] (yarp_decode)             0.00       0.00 r
+  U717/Y (MUX2X1)                                         0.02       0.02 f
+  U716/Y (INVX1)                                          0.03       0.04 r
+  u_yarp_execute/opr_b_i[18] (yarp_execute)               0.00       0.04 r
+  u_yarp_execute/U1057/Y (MUX2X1)                         0.04       0.09 r
+  u_yarp_execute/U1056/Y (AOI21X1)                        0.02       0.11 f
+  u_yarp_execute/U571/Y (INVX1)                           0.00       0.10 r
+  u_yarp_execute/U255/Y (OR2X1)                           0.05       0.15 r
+  u_yarp_execute/alu_res_o[18] (yarp_execute)             0.00       0.15 r
+  u_yarp_data_mem/data_addr_i[18] (yarp_data_mem)         0.00       0.15 r
+  u_yarp_data_mem/data_mem_addr_o[18] (yarp_data_mem)     0.00       0.15 r
+  data_mem_addr_o[18] (out)                               0.00       0.15 r
+  data arrival time                                                  0.15
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+  Startpoint: u_yarp_decode/instr_imm_o[17] (internal pin)
+  Endpoint: data_mem_addr_o[17]
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  u_yarp_decode/instr_imm_o[17] (yarp_decode)             0.00       0.00 r
+  U719/Y (MUX2X1)                                         0.02       0.02 f
+  U718/Y (INVX1)                                          0.03       0.04 r
+  u_yarp_execute/opr_b_i[17] (yarp_execute)               0.00       0.04 r
+  u_yarp_execute/U1068/Y (MUX2X1)                         0.04       0.09 r
+  u_yarp_execute/U1067/Y (AOI21X1)                        0.02       0.11 f
+  u_yarp_execute/U574/Y (INVX1)                           0.00       0.10 r
+  u_yarp_execute/U257/Y (OR2X1)                           0.05       0.15 r
+  u_yarp_execute/alu_res_o[17] (yarp_execute)             0.00       0.15 r
+  u_yarp_data_mem/data_addr_i[17] (yarp_data_mem)         0.00       0.15 r
+  u_yarp_data_mem/data_mem_addr_o[17] (yarp_data_mem)     0.00       0.15 r
+  data_mem_addr_o[17] (out)                               0.00       0.15 r
+  data arrival time                                                  0.15
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+  Startpoint: u_yarp_decode/instr_imm_o[13] (internal pin)
+  Endpoint: data_mem_addr_o[13]
+            (output port)
+  Path Group: (none)
+  Path Type: min
+
+  Point                                                   Incr       Path
+  --------------------------------------------------------------------------
+  u_yarp_decode/instr_imm_o[13] (yarp_decode)             0.00       0.00 r
+  U727/Y (MUX2X1)                                         0.02       0.02 f
+  U726/Y (INVX1)                                          0.03       0.04 r
+  u_yarp_execute/opr_b_i[13] (yarp_execute)               0.00       0.04 r
+  u_yarp_execute/U1131/Y (MUX2X1)                         0.04       0.09 r
+  u_yarp_execute/U1130/Y (AOI21X1)                        0.02       0.11 f
+  u_yarp_execute/U586/Y (INVX1)                           0.00       0.10 r
+  u_yarp_execute/U265/Y (OR2X1)                           0.05       0.15 r
+  u_yarp_execute/alu_res_o[13] (yarp_execute)             0.00       0.15 r
+  u_yarp_data_mem/data_addr_i[13] (yarp_data_mem)         0.00       0.15 r
+  u_yarp_data_mem/data_mem_addr_o[13] (yarp_data_mem)     0.00       0.15 r
+  data_mem_addr_o[13] (out)                               0.00       0.15 r
+  data arrival time                                                  0.15
+  --------------------------------------------------------------------------
+  (Path is unconstrained)
+
+
+1
