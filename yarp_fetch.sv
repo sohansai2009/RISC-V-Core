@@ -1,15 +1,3 @@
-// --------------------------------------------------------
-// // Copyright (C) quicksilicon.in - All Rights Reserved
-// //
-// // Unauthorized copying of this file, via any medium is
-// // strictly prohibited
-// // Proprietary and confidential
-// // --------------------------------------------------------
-//
-// // --------------------------------------------------------
-// // Instruction Memory - RTL
-// // --------------------------------------------------------
-//
 module yarp_instr_mem (
   input    logic          clk,
   input    logic          reset_n,
