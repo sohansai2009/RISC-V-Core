@@ -9,6 +9,8 @@
 
 module yarp_control import yarp_pkg::*; (
   // Instruction type
+  input logic clk,
+  input logic reset_n,
   input   logic         is_r_type_i,
   input   logic         is_i_type_i,
   input   logic         is_s_type_i,
@@ -22,16 +24,16 @@ module yarp_control import yarp_pkg::*; (
   input   logic [6:0]   instr_opcode_i,
 
   // Control signals
-  output  logic         pc_sel_o,
-  output  logic         op1sel_o,  //source 1 to alu (rs1 or pc(for branch))
-  output  logic         op2sel_o,  //source 2 to alu (rs2 or imm (for i,s and b))
-  output  logic [3:0]   alu_func_o, //tells the alu, what function should it perform
-  output  logic [1:0]   rf_wr_data_o, //decides what data has to be sent to the reg_file
-  output  logic         data_req_o,
+  output  logic         pc_sel_o, //after alu_stage (in same stage where branch is evaluateed) -. two flops
+  output  logic         op1sel_o,  //source 1 to alu (rs1 or pc(for branch))-> need to flop
+  output  logic         op2sel_o,  //source 2 to alu (rs2 or imm (for i,s and b)) -> need to flop
+  output  logic [3:0]   alu_func_o, //tells the alu, what function should it perform -> need to flop
+  output  logic [1:0]   rf_wr_data_o, //decides what data has to be sent to the reg_file -> will be used in write back stage, so need to use two flops
+  output  logic         data_req_o, //has to go to the data_mem in the same cycle when alu finishes calculating the address (after two cycles)
   output  logic [1:0]   data_byte_o,
-  output  logic         data_wr_o,//decides whether or not write to mem or not
-  output  logic         zero_extnd_o,
-  output  logic         rf_wr_en_o
+  output  logic         data_wr_o,//decides whether or not write to mem or not-> has to go to the data_mem after two cycles, after ex stage 
+  output  logic         zero_extnd_o, //after two cycles (has to go to write mem)
+  output  logic         rf_wr_en_o //has to reach wb stage, need to use three flops (after three cycles)
 );
  
   // Write your logic here...
@@ -178,7 +180,16 @@ module yarp_control import yarp_pkg::*; (
   
   
   //define the outputs
-assign pc_sel_o = control.pc_sel;
+
+logic [1:0] rf_wr_data_q;
+logic data_req_q;
+logic [1:0] data_byte_q;
+logic data_wr_q;
+logic zero_extnd_q;
+logic rf_wr_en_q1;
+logic rf_wr_en_q2;
+logic pc_sel_q;
+/*assign pc_sel_o = control.pc_sel;
 assign op1sel_o = control.op1sel;
 assign op2sel_o = control.op2sel;
 assign alu_func_o = control.alu_func_sel;
@@ -187,14 +198,48 @@ assign data_req_o = control.data_req;
   assign data_byte_o = control.data_byte;
 assign data_wr_o = control.data_wr;
 assign zero_extnd_o = control.zero_extnd;
-assign rf_wr_en_o = control.rf_wr_en;
-
-  
+assign rf_wr_en_o = control.rf_wr_en;*/
+always_ff @(posedge clk)
+begin
+if(!reset_n)
+begin
+rf_wr_data_q<=0;
+data_req_q<=0;
+data_byte_q<=0;
+data_wr_q<=0;
+zero_extnd_q<=0;
+rf_wr_en_q1<=0;
+rf_wr_en_q2<=0;
+pc_sel_q<=0;
+end
+else
+begin
+//define values for flops
+rf_wr_data_q<=control.rf_wr_data;
+data_req_q<=control.data_req;
+data_byte_q<=control.data_byte;
+data_wr_q<=control.data_wr;
+zero_extnd_q<=control.zero_extnd;
+rf_wr_en_q1<=control.rf_wr_en;
+rf_wr_en_q2<=rf_wr_en_q1;
+pc_sel_q<=control.pc_sel;
+//define the output signals
+pc_sel_o<=pc_sel_q;
+op1sel_o<=control.op1sel;
+op2sel_o<=control.op2sel;
+alu_func_o<=control.alu_func_sel;
+rf_wr_data_o<=rf_wr_data_q;
+data_req_o<=data_req_q;
+data_byte_o<=data_byte_q;
+data_wr_o<=data_wr_q;
+zero_extnd_o<=zero_extnd_q;
+rf_wr_en_o<=rf_wr_en_q2;
+end
+end  
   
   
   
   
 
 endmodule
-
 
