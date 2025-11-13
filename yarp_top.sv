@@ -31,12 +31,40 @@ module yarp_top import yarp_pkg::*; #(
 
 );
 
-  // Write your logic here...
-	//temp reg
+  //define all the internal registers
   logic [31:0] alu_op1;
   logic [31:0] imem_dec_instr1;
-  
   logic reset_q; //flop to store the first reset
+  logic [31:0] pc_q,next_pc,next_pc_seq;
+  logic [4:0] dec_rf_rs1;
+  logic [4:0] dec_rf_rs2;
+  logic [4:0] dec_rf_rd;
+  logic [6:0] dec_ctrl_op;
+  logic [2:0] dec_ctrl_funct3;
+  logic [7:0] dec_ctrl_funct7;
+  logic dec_ctrl_r;
+  logic dec_ctrl_i;
+  logic dec_ctrl_s;
+  logic dec_ctrl_b;
+  logic dec_ctrl_u;
+  logic dec_ctrl_j;
+  logic [31:0] dec_imm;
+  logic [31:0] rf_rs1_data,rf_rs2_data;
+  logic [31:0] rf_wr_data;
+  logic [31:0] data_mem_rd_data;
+  logic ctrl_pc_sel;
+  logic ctrl_op1_sel;
+  logic ctrl_op2_sel;
+  logic ctrl_data_req;
+  logic ctrl_data_wr;
+  logic [1:0] ctrl_data_byte;
+  logic ctrl_zero_extnd;
+  logic ctrl_wr_en;
+  logic [1:0] ctrl_rf_wr_data;
+  logic [3:0] ctrl_alu_func;
+  logic b_branch_taken;
+  logic [31:0] opr_a_sel;
+  logic [31:0] opr_b_sel;
   always_ff @(posedge clk or negedge reset_n)
     begin
       if(!reset_n)
@@ -44,9 +72,6 @@ module yarp_top import yarp_pkg::*; #(
       else
         reset_q <= 1;
     end
-  //pc_reg
-  logic [31:0] pc_q,next_pc,next_pc_seq;
-  
   
   //value for seq_pc
   assign next_pc_seq=pc_q+32'h4;
@@ -71,20 +96,6 @@ module yarp_top import yarp_pkg::*; #(
     .mem_rd_data_i            (instr_mem_rd_data_i),
     .instr_mem_instr_o        (imem_dec_instr1)  //instruction which goes to the decode stage
   );
-
-  logic [4:0] dec_rf_rs1;
-  logic [4:0] dec_rf_rs2;
-  logic [4:0] dec_rf_rd;
-  logic [6:0] dec_ctrl_op;
-  logic [2:0] dec_ctrl_funct3;
-  logic [7:0] dec_ctrl_funct7;
-  logic dec_ctrl_r;
-  logic dec_ctrl_i;
-  logic dec_ctrl_s;
-  logic dec_ctrl_b;
-  logic dec_ctrl_u;
-  logic dec_ctrl_j;
-  logic [31:0] dec_imm;
   
   // --------------------------------------------------------
   // Instruction Decode
@@ -116,9 +127,6 @@ module yarp_top import yarp_pkg::*; #(
   //wr_data_i (data to be written will come from the 4:1 mux, which will decide what type of data to be written)
   //wr_data_i can be any value from alu,mem,updated_pc,imm
   
-  logic [31:0] rf_rs1_data,rf_rs2_data;
-  logic [31:0] rf_wr_data;
-  logic [31:0] data_mem_rd_data;
   assign rf_wr_data = (ctrl_rf_wr_data==Alu) ? alu_op1:
     (ctrl_rf_wr_data==Mem)?data_mem_rd_data:
     (ctrl_rf_wr_data==Imm)?dec_imm:
@@ -138,19 +146,11 @@ module yarp_top import yarp_pkg::*; #(
   // --------------------------------------------------------
   // Control Unit
   // -------------------------------------------------------- 
-  
-  logic ctrl_pc_sel;
-  logic ctrl_op1_sel;
-  logic ctrl_op2_sel;
-  logic ctrl_data_req;
-  logic ctrl_data_wr;
-  logic [1:0] ctrl_data_byte;
-  logic ctrl_zero_extnd;
-  logic ctrl_wr_en;
-  logic [1:0] ctrl_rf_wr_data;
-  logic [3:0] ctrl_alu_func;
+ 
   //logic to decide the pc_sel signal
   yarp_control u_yarp_control (
+    .clk                      (clk),
+    .reset_n                  (reset_n),
     .instr_funct3_i           (dec_ctrl_funct3),
     .instr_funct7_bit5_i      (dec_ctrl_funct7[5]),
     .instr_opcode_i           (dec_ctrl_op),
@@ -175,8 +175,9 @@ module yarp_top import yarp_pkg::*; #(
   // --------------------------------------------------------
   // Branch Control
   // --------------------------------------------------------
-  logic b_branch_taken;
   yarp_branch_control u_yarp_branch_control (
+    .clk                      (clk),
+    .reset_n                  (reset_n),
     .opr_a_i                  (rf_rs1_data),
     .opr_b_i                  (rf_rs2_data),
     .is_b_type_ctl_i          (dec_ctrl_b),
@@ -190,13 +191,13 @@ module yarp_top import yarp_pkg::*; #(
   
   //we need muxes to implement
   //opr_a_i will be pc if branch type instr else it will be rs1_data
-  logic [31:0] opr_a_sel;
   assign opr_a_sel= (ctrl_op1_sel)?pc_q:rf_rs1_data; //if b_type, need to select pc_q, else, rf_rs1_data
   
-  logic [31:0] opr_b_sel;
   assign opr_b_sel=(ctrl_op2_sel)?dec_imm:rf_rs2_data;
   
   yarp_execute u_yarp_execute (
+    .clk                      (clk),
+    .reset_n                  (reset_n),
     .opr_a_i                  (opr_a_sel),
     .opr_b_i                  (opr_b_sel),
     .op_sel_i                 (ctrl_alu_func),
@@ -225,4 +226,3 @@ module yarp_top import yarp_pkg::*; #(
   );
 
 endmodule
-
