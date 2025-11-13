@@ -13,6 +13,8 @@
 
 module yarp_execute import yarp_pkg::*; (
   // Source operands
+  input clk,
+  input reset_n,
   input   logic [31:0] opr_a_i,
   input   logic [31:0] opr_b_i,
 
@@ -51,7 +53,14 @@ module yarp_execute import yarp_pkg::*; (
     endcase
   end
   
-  assign alu_res_o=temp;
+  
+
+  always_ff @(posedge clk)
+  begin
+  if(!reset_n)
+  alu_res_o<=0;
+  else
+  alu_res_o<=temp;
+  end
 
 endmodule
-
