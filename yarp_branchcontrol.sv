@@ -9,6 +9,8 @@
 
 module yarp_branch_control import yarp_pkg::*; (
   // Source operands
+  input clk,
+  input reset_n,
   input  logic [31:0] opr_a_i,
   input  logic [31:0] opr_b_i,
 
@@ -43,9 +45,15 @@ module yarp_branch_control import yarp_pkg::*; (
     endcase
   end
   
-  assign branch_taken_o=(is_b_type_ctl_i)?branch_taken_temp:0;
+  always_ff @(posedge clk)
+  begin
+  if(!reset_n)
+  branch_taken_o<=0;
+  else
+  branch_taken_o<=branch_taken_temp;
+  end
+  
       
 
 endmodule
-
 
