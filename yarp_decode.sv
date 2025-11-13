@@ -14,23 +14,25 @@
 // information about the instruction in the same cycle
 // --------------------------------------------------------
 
+
+//imp-> decode unit, controller module and reg_file will be executed within the same cycle
 module yarp_decode import yarp_pkg::*; (
   input logic clk,
   input logic reset_n,
   input   logic [31:0]  instr_i,
-  output  logic [4:0]   rs1_o,
-  output  logic [4:0]   rs2_o,
-  output  logic [4:0]   rd_o,
-  output  logic [6:0]   op_o,
-  output  logic [2:0]   funct3_o,
-  output  logic [6:0]   funct7_o,
-  output  logic         r_type_instr_o,
-  output  logic         i_type_instr_o,
-  output  logic         s_type_instr_o,
-  output  logic         b_type_instr_o,
-  output  logic         u_type_instr_o,
-  output  logic         j_type_instr_o,
-  output  logic [31:0]  instr_imm_o
+  output  logic [4:0]   rs1_o,//will go to reg file, so no need to pipeline 
+  output  logic [4:0]   rs2_o,//will go to reg file 
+  output  logic [4:0]   rd_o, //will go to reg file
+  output  logic [6:0]   op_o, //will go to controller
+  output  logic [2:0]   funct3_o,//will go to controller
+  output  logic [6:0]   funct7_o, //will go to controller
+  output  logic         r_type_instr_o, //will go to controller
+  output  logic         i_type_instr_o, //will go to controller
+  output  logic         s_type_instr_o, //will go to controller
+  output  logic         b_type_instr_o, //will go to controller
+  output  logic         u_type_instr_o, //will go to controller
+  output  logic         j_type_instr_o, //will go to controller
+  output  logic [31:0]  instr_imm_o //will go to alu, or be written to reg file(after few cycles), so need to flop only this
 );
   
   // Write your logic here...
@@ -45,7 +47,6 @@ module yarp_decode import yarp_pkg::*; (
   //assign the value for source and dest reg
   
   assign op_code=instr_i[6:0];
-  assign op_o=op_code;
   assign rs1=instr_i[19:15];
   assign rs2=instr_i[24:20];
   assign rd=instr_i[11:7];
@@ -53,35 +54,12 @@ module yarp_decode import yarp_pkg::*; (
   assign funct3=instr_i[14:12];
   assign funct7=instr_i[31:25];
   
-  
-  //for pipelining, you need to use the output signals as registers
-  always_ff @(posedge clk)
-  begin
-  
-  
-  
-  
-  
-  
-  
-  
-  if(!reset_n)
-  begin
-  rs1_o<=0;
-  rs2_o<=0;
-  rd_o<=0;
-  funct3_o<=0;
-  funct7_o<=0;
-  end
-  else
-  begin
-  rs1_o<=rs1;
-  rs2_o<=rs2;
-  rd_o<=rd;
-  funct3_o<=funct3;
-  funct7_o<=funct7;
-  end
-  end
+  assign rs1_o=rs1;
+  assign rs2_o=rs2;
+  assign rd_o=rd;
+  assign op_o=op_code;
+  assign funct3_o=funct3;
+  assign funct7_o=funct7;
   
   
   //define immediate values(these should also be 32 bits)
@@ -138,6 +116,15 @@ module yarp_decode import yarp_pkg::*; (
   end
   
   
+  assign r_type_instr_o=r_type_decode;
+  assign i_type_instr_o=i_type_decode;
+  assign s_type_instr_o=s_type_decode;
+  assign b_type_instr_o=b_type_decode;
+  assign u_type_instr_o=u_type_decode;
+  assign j_type_instr_o=j_type_decode;
+
+
+  
   //when to pass the immediate value (only when r type instr not requested)
 
   logic [31:0] imm;
@@ -147,30 +134,18 @@ module yarp_decode import yarp_pkg::*; (
     (b_type_decode)?imm_b:
     (u_type_decode)?imm_u:
     (j_type_decode)?imm_j: 0;
-  
-  
-  
+
+
   always_ff @(posedge clk)
   begin
   if(!reset_n)
   begin
-      r_type_instr_o<=0;
-      i_type_instr_o<=0; 
-      s_type_instr_o<=0;    
-      b_type_instr_o<=0;
-      u_type_instr_o<=0;
-      j_type_instr_o<=0;
-      instr_imm_o<=0;
+  instr_imm_o<=0;
   end
   else
   begin
-    r_type_instr_o<=r_type_decode;
-    i_type_instr_o<=i_type_decode;
-    s_type_instr_o<=s_type_decode;
-    b_type_instr_o<=b_type_decode;
-    u_type_instr_o<=u_type_decode;
-    j_type_instr_o<=j_type_decode;
-    instr_imm_o<=imm;
+  instr_imm_o<=imm;
   end
   end
+  
 endmodule
