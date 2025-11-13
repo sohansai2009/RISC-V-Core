@@ -61,9 +61,20 @@ end
     end
   
   //define output for rs1 and rs2
-  assign rs1_data_o=regfile[rs1_addr_i];
-  assign rs2_data_o=regfile[rs2_addr_i];
+  //use pipeline registers
+  always_ff @(posedge clk)
+  begin
+  if(!reset_n)
+  begin
+  rs1_data_o<=0;
+  rs2_data_o<=0;
+  end
+  else
+  begin
+  rs1_data_o<=regfile[rs1_addr_i];
+  rs2_data_o<=regfile[rs2_addr_i];
+  end
+  end
       
 
 endmodule
-
