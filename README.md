@@ -11,8 +11,6 @@ Below is the complete architectural block diagram of the RISC-V processor, inclu
 
 ![RISC-V Core Architecture](RISC-V_Core.png)
 
-> *Replace `RISC-V_Architecture.png` with your actual architecture diagram PNG filename.*
-
 ---
 
 ## 🚀 Overview
