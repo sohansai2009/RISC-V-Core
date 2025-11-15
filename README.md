@@ -9,7 +9,7 @@ The core consists of all fundamental CPU components — Instruction Memory, Deco
 
 Below is the complete architectural block diagram of the RISC-V processor, including the Instruction Cache, Data Cache, and Core Pipeline structure:
 
-![RISC-V Core Architecture](RISC-V Core (1).png)
+![RISC-V Core Architecture](RISC-V Core(1).png)
 
 > *Replace `RISC-V_Architecture.png` with your actual architecture diagram PNG filename.*
 
