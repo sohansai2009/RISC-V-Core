@@ -1,7 +1,10 @@
 # 🧠 Custom RISC-V Core
 
-This project implements a **Single-Cycle RISC-V Core** built completely from scratch using **SystemVerilog**.
-The core consists of all fundamental CPU components — Instruction Memory, Decode Unit, Register File, Execute Unit, Data Memory, Control Unit, Branch Control Unit, and a Program Counter Register.
+This project implements a **RISC-V Core** built completely from scratch using **SystemVerilog**.  
+It began as a **Single-Cycle RV32I processor** and has now been extended into a **5-stage pipelined CPU** with an evolving memory hierarchy.  
+The design includes all core components — Instruction Memory, Decode Unit, Register File, Execute Unit, Data Memory, Control Unit, Branch Control Unit, and a Program Counter Register.  
+As part of the architectural improvements, a **direct-mapped instruction cache** has also been implemented to accelerate instruction fetch performance.
+
 
 ---
 
@@ -33,39 +36,55 @@ The design aims to maintain modularity and clarity, making it easier to extend i
 
 ## ✅ Current Progress
 
-* ✔️ **Baseline Core Ready**
-  Designed and verified a complete single-cycle RISC-V processor.
+* ✔️ **Baseline Core Ready**  
+  Designed and verified a fully functional single-cycle RISC-V processor implementing all RV32I base instructions.
 
-* ✔️ **Functional Verification**
-  Verified the design using real RISC-V assembly instructions converted to HEX format using the **RISC-V toolchain**.
-  Waveforms were analyzed in **Xilinx Vivado** to confirm correct instruction execution.
+* ✔️ **Functional Verification**  
+  Validated the design using real RISC-V assembly programs, converted to HEX using the **RISC-V toolchain**, and verified correct execution through **Xilinx Vivado** waveform analysis.
 
-* ✔️ **Synthesis & Timing Analysis**
+* ✔️ **Synthesis & Timing Analysis**  
+  * Developed a custom **TCL script** to run synthesis and automatically check for unintended latches — none were found.  
+  * Analyzed the timing reports for both the pipelined and non-pipelined cores.  
+The pipelined CPU shows a **slowest arrival time of 3.47 ns**, while the single-cycle core reports a **slowest arrival time of 1.73 ns**.  
+However, the critical path in the single-cycle design was observed **between the same register**, indicating that the reported value reflects an unconstrained or unrealistic path due to the nature of single-cycle timing rather than an actual improvement over the pipelined architecture.
 
-  * Wrote a custom **TCL script** to automate synthesis and check for unintended latches — none detected.
-  * Timing results:
 
-    * **Slowest path:** 4.5 ns
-    * **Fastest path:** 0.5 ns
-    * **Note:** The synthesis tool reported *Unconstrained Timing Paths*, expected for a single-cycle CPU.
+* ✔️ **Extended to 5-Stage Pipelined CPU**  
+  Converted the single-cycle architecture into a **5-stage pipelined CPU** (IF → ID → EX → MEM → WB), significantly reducing the critical path and enabling higher frequency scaling.
+
+* ✔️ **Direct-Mapped Instruction Cache Implemented**  
+  Added a **direct-mapped instruction cache** between the CPU and Instruction Memory to reduce fetch latency and prepare the design for future SoC-level memory hierarchies.
+
 
 ---
 
 ## 🧩 Next Steps
 
-* 🔄 **Pipeline Extension**
-  Extend the core into a **5-stage pipelined CPU**, introducing:
+* 🔄 **Integrate the Pipeline**
+  Fully integrate the already implemented **5-stage pipelined CPU** with proper handling of:
+  
+  * Hazard Detection Unit  
+  * Forwarding/Bypass logic  
+  * Pipeline stall control for load-use and cache-miss scenarios  
+  * Improved timing and throughput
 
-  * Hazard Detection Unit
-  * Branch Prediction algorithms
-  * Timing and throughput improvements
+* 📦 **Implement Direct-Mapped Data Cache**
+  Extend the memory hierarchy by designing a **direct-mapped data cache** for the MEM stage to accelerate load/store operations.
 
-* 🧱 **Mini-SoC Integration**
-  Once the pipelined CPU is functional, integrate it into a **mini System-on-Chip (SoC)** featuring:
+* ⏸️ **Pipeline Stall Logic for Cache Misses**
+  Introduce a stall mechanism to maintain pipeline correctness during cache misses:
+  
+  * Freeze IF, ID, and EX stages  
+  * Allow MEM/WB to complete  
+  * Maintain correct ordering and forwarding
 
-  * AXI-Lite peripheral interface
-  * Basic memory-mapped I/O blocks
-  * Top-level SoC interconnect design
+* 📈 **System Performance Analysis**
+  Analyze full-system behavior after adding caches:
+  
+  * IPC (Instructions Per Cycle)  
+  * Cache hit/miss rate  
+  * Memory latency improvements  
+  * Impact on maximum frequency
 
 ---
 
