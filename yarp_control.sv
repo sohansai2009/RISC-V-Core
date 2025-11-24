@@ -33,7 +33,8 @@ module yarp_control import yarp_pkg::*; (
   output  logic [1:0]   data_byte_o,
   output  logic         data_wr_o,//decides whether or not write to mem or not-> has to go to the data_mem after two cycles, after ex stage 
   output  logic         zero_extnd_o, //after two cycles (has to go to write mem)
-  output  logic         rf_wr_en_o //has to reach wb stage, need to use three flops (after three cycles)
+  output  logic         rf_wr_en_o, //has to reach wb stage, need to use three flops (after three cycles)
+  input logic control_d_cache_busy_in
 );
  
   // Write your logic here...
@@ -127,7 +128,7 @@ module yarp_control import yarp_pkg::*; (
       Sb: s_control.data_byte=Byte;
       Sh: s_control.data_byte=Half;
       Sw: s_control.data_byte=Word;
-      default: s_control='h0;
+      //default: s_control='h0;
     endcase
   end
     
@@ -161,7 +162,7 @@ module yarp_control import yarp_pkg::*; (
   always_comb begin
     j_control='h0;
     j_control.rf_wr_data=Pc;
-    j_control.op1sel=1'b1;
+    j_control.op1sel=1'b1; //select the pc value
     j_control.op2sel=1'b1;
     j_control.pc_sel=1'b1; //select the target address
   end
@@ -189,16 +190,7 @@ logic zero_extnd_q;
 logic rf_wr_en_q1;
 logic rf_wr_en_q2;
 logic pc_sel_q;
-/*assign pc_sel_o = control.pc_sel;
-assign op1sel_o = control.op1sel;
-assign op2sel_o = control.op2sel;
-assign alu_func_o = control.alu_func_sel;
-assign rf_wr_data_o = control.rf_wr_data;
-assign data_req_o = control.data_req;
-  assign data_byte_o = control.data_byte;
-assign data_wr_o = control.data_wr;
-assign zero_extnd_o = control.zero_extnd;
-assign rf_wr_en_o = control.rf_wr_en;*/
+
 always_ff @(posedge clk)
 begin
 if(!reset_n)
@@ -213,6 +205,8 @@ rf_wr_en_q2<=0;
 pc_sel_q<=0;
 end
 else
+begin
+if(!control_d_cache_busy_in) //if no stall, send the correct values
 begin
 //define values for flops
 rf_wr_data_q<=control.rf_wr_data;
@@ -235,6 +229,28 @@ data_wr_o<=data_wr_q;
 zero_extnd_o<=zero_extnd_q;
 rf_wr_en_o<=rf_wr_en_q2;
 end
+else if(control_d_cache_busy_in) //if stall, restore the prev values
+begin
+rf_wr_data_q<=rf_wr_data_q;
+data_req_q<=data_req_q;
+data_byte_q<=data_byte_q;
+data_wr_q<=data_wr_q;
+zero_extnd_q<=zero_extnd_q;
+rf_wr_en_q1<=rf_wr_en_q1;
+rf_wr_en_q2<=rf_wr_en_q2;
+pc_sel_q<=pc_sel_q;
+pc_sel_o<=pc_sel_o;
+op1sel_o<=op1sel_o;
+op2sel_o<=op2sel_o;
+alu_func_o<=alu_func_o;
+rf_wr_data_o<=rf_wr_data_o;
+data_req_o<=data_req_o;
+data_byte_o<=data_byte_o;
+data_wr_o<=data_wr_o;
+zero_extnd_o<=zero_extnd_o;
+rf_wr_en_o<=rf_wr_en_o;
+end
+end
 end  
   
   
@@ -242,4 +258,5 @@ end
   
 
 endmodule
+
 

@@ -19,7 +19,8 @@ module yarp_branch_control import yarp_pkg::*; (
   input  logic [2:0]  instr_func3_ctl_i,
 
   // Branch outcome
-  output logic        branch_taken_o
+  output logic        branch_taken_o,
+  input logic branch_d_cache_busy_in
 );
 
   // Write your logic here...
@@ -34,26 +35,35 @@ module yarp_branch_control import yarp_pkg::*; (
   logic branch_taken_temp;
   //case statement to calculate the value of different branches
   always_comb begin
-    case(instr_func3_ctl_i)
-      Beq: branch_taken_temp=(opr_a_i==opr_b_i)?1:0;
-      Bne: branch_taken_temp=(opr_a_i!=opr_b_i)?1:0;
-      Blt: branch_taken_temp=(opr_a_i[31]==opr_b_i[31])?((opr_a_i[31]==0)?(opr_a_i<opr_b_i):(twos_comp_a<twos_comp_b)):opr_a_i[31];
-      Bge: branch_taken_temp=(opr_a_i[31]==opr_b_i[31])?((opr_a_i[31]==0)?(opr_a_i>=opr_b_i):(twos_comp_a>=twos_comp_b)):opr_a_i[31];
-      Bltu: branch_taken_temp=(opr_a_i<opr_b_i)?1:0;
-      Bgeu: branch_taken_temp=(opr_a_i >= opr_b_i)?1:0;
-      default: branch_taken_temp=32'h0;
-    endcase
+    if(is_b_type_ctl_i)
+    begin
+        case(instr_func3_ctl_i)
+          Beq: branch_taken_temp=(opr_a_i==opr_b_i)?1:0;
+          Bne: branch_taken_temp=(opr_a_i!=opr_b_i)?1:0;
+          Blt: branch_taken_temp=(opr_a_i[31]==opr_b_i[31])?((opr_a_i[31]==0)?(opr_a_i<opr_b_i):(twos_comp_a<twos_comp_b)):opr_a_i[31];
+          Bge: branch_taken_temp=(opr_a_i[31]==opr_b_i[31])?((opr_a_i[31]==0)?(opr_a_i>=opr_b_i):(twos_comp_a>=twos_comp_b)):opr_a_i[31];
+          Bltu: branch_taken_temp=(opr_a_i<opr_b_i)?1:0;
+          Bgeu: branch_taken_temp=(opr_a_i >= opr_b_i)?1:0;
+        endcase
+    end
+    else
+    begin
+    branch_taken_temp=0;
+    end
   end
   
   always_ff @(posedge clk)
   begin
   if(!reset_n)
   branch_taken_o<=0;
-  else
+  else if(!branch_d_cache_busy_in) //if no stall, take the correct value
   branch_taken_o<=branch_taken_temp;
+  else if(branch_d_cache_busy_in) //if stall, restore the prev value
+  branch_taken_o<=branch_taken_o;
   end
   
       
 
 endmodule
+
 

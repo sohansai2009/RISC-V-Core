@@ -32,7 +32,8 @@ module yarp_decode import yarp_pkg::*; (
   output  logic         b_type_instr_o, //will go to controller
   output  logic         u_type_instr_o, //will go to controller
   output  logic         j_type_instr_o, //will go to controller
-  output  logic [31:0]  instr_imm_o //will go to alu, or be written to reg file(after few cycles), so need to flop only this
+  output  logic [31:0]  instr_imm_o, //will go to alu, or be written to reg file(after few cycles), so need to flop only this 
+  input logic decode_d_cache_busy
 );
   
   // Write your logic here...
@@ -142,9 +143,13 @@ module yarp_decode import yarp_pkg::*; (
   begin
   instr_imm_o<=0;
   end
-  else
+  else if(!decode_d_cache_busy) //if no stall, send the correct imm value
   begin
   instr_imm_o<=imm;
+  end
+  else if(decode_d_cache_busy)
+  begin
+  instr_imm_o<=instr_imm_o; //if stall, restore the prev value
   end
   end
   

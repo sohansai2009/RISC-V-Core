@@ -22,7 +22,8 @@ module yarp_execute import yarp_pkg::*; (
   input   logic [3:0]  op_sel_i,
 
   // ALU output
-  output  logic [31:0] alu_res_o
+  output  logic [31:0] alu_res_o,
+  input logic execute_cache_busy_in
 );
 
   // Write your logic here...
@@ -59,8 +60,11 @@ module yarp_execute import yarp_pkg::*; (
   begin
   if(!reset_n)
   alu_res_o<=0;
-  else
+  else if(!execute_cache_busy_in) //if no stall, send the correct value
   alu_res_o<=temp;
+  else if(execute_cache_busy_in) //if stall, restore the prev value
+  alu_res_o<=alu_res_o;
   end
 
 endmodule
+

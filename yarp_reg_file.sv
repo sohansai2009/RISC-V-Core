@@ -26,7 +26,8 @@ module yarp_regfile (
 
   // Register Data
   output  logic [31:0]   rs1_data_o,
-  output  logic [31:0]   rs2_data_o
+  output  logic [31:0]   rs2_data_o,
+  input regfile_d_cache_busy_in
 );
 
   logic [31:0] regfile [31:0];
@@ -36,7 +37,7 @@ module yarp_regfile (
 //read the reg file.hex file and store the contents in rgfile
 initial
 begin
-$readmemh("./reg_file.hex",regfile);
+$readmemh("reg_file.hex",regfile);
 end
   
   //define the write logic
@@ -69,12 +70,18 @@ end
   rs1_data_o<=0;
   rs2_data_o<=0;
   end
-  else
+  else if(!regfile_d_cache_busy_in) //if no stall, send the correct value
   begin
   rs1_data_o<=regfile[rs1_addr_i];
   rs2_data_o<=regfile[rs2_addr_i];
+  end
+  else if(regfile_d_cache_busy_in)
+  begin
+  rs1_data_o<=rs1_data_o; //if stall, restore the prev value
+  rs2_data_o<=rs2_data_o;
   end
   end
       
 
 endmodule
+

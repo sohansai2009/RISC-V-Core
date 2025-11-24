@@ -7,25 +7,29 @@ output logic mem_done;
 
 
 //declare memory
-logic [127:0] mem [255:0];
+logic [127:0] i_mem [255:0];
 //load the data into mem from .hex file
 initial
 begin
-$readmemh("mem.hex",mem);
+$readmemh("instr_mem.hex",i_mem);
 end
 
 
 //now, we need to produce the output only when cache requests data from main memory
-always_comb begin
+always_ff @(posedge clk)
+begin
+if(reset_n)
+begin
 if(mem_req_in)
 begin
-data_out=mem[in_addr];
-mem_done=1; //implies memory has successfully sent cache the data it asked for
+data_out<=i_mem[in_addr];
+mem_done<=1; //implies memory has successfully sent cache the data it asked for
+end
 end
 else
 begin
-mem_done=0;
-data_out=0;
+mem_done<=0;
+data_out<=0;
 end
 end
 
