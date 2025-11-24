@@ -94,7 +94,7 @@ Added cache-aware stall logic:
 
 ![RISC-V Core Output Waveform_Without Memory Subsystem](Yarp_RISC-V_Waveform.png)
 
-!![RISC-V Core Output Waveform_With Memory Subsystem](rv32i_memory_subsystem_output.png)
+![RISC-V Core Output Waveform_With Memory Subsystem](rv32i_memory_subsystem_output.png)
 
 ---
 
