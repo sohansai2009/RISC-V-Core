@@ -71,9 +71,6 @@ Added cache-aware stall logic:
 - Pipeline freezes when data cache is busy or on a cache miss.  
 - Ensures correct execution ordering between MEM and WB stages.
 
-✔️ **Complete Timing Analysis of Core + Caches**  
-Analyzed timing across cached and non-cached versions to quantify the effect of memory hierarchy on critical paths.
-
 ---
 
 ## 🧩 Next Steps
@@ -92,6 +89,9 @@ Analyzed timing across cached and non-cached versions to quantify the effect of 
 🧹 **Clean Codebase & Documentation**
 - Add SystemVerilog package + typedef cleanup  
 - Improve modularity in memory subsystem
+
+🔄 **Complete Timing Analysis of Core + Caches**  
+- Analyzed timing across cached and non-cached versions to quantify the effect of memory hierarchy on critical paths.
 
 ---
 
