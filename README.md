@@ -1,16 +1,15 @@
 # 🧠 Custom RISC-V Core
 
 This project implements a **RISC-V Core** built completely from scratch using **SystemVerilog**.  
-It began as a **Single-Cycle RV32I processor** and has now been extended into a **5-stage pipelined CPU** with an evolving memory hierarchy.  
-The design includes all core components — Instruction Memory, Decode Unit, Register File, Execute Unit, Data Memory, Control Unit, Branch Control Unit, and a Program Counter Register.  
-As part of the architectural improvements, a **direct-mapped instruction cache** has also been implemented to accelerate instruction fetch performance.
-
+It began as a **Single-Cycle RV32I processor** and has now evolved into a **5-stage pipelined CPU** with an expanding memory hierarchy.  
+The design includes core components such as the Instruction Memory, Decode Unit, Register File, Execute Unit, Data Memory, Control Unit, Branch Control Unit, and Program Counter Register.  
+A **direct-mapped instruction cache and data cache** have also been implemented as part of the memory subsystem.
 
 ---
 
 ## 🏗️ Core Architecture Diagram
 
-Below is the complete architectural block diagram of the RISC-V processor, including the Instruction Cache, Data Cache, and Core CPU structure:
+Below is the complete architectural block diagram of the RISC-V processor, including the Instruction Cache, Data Cache, and CPU pipeline structure:
 
 ![RISC-V Core Architecture](RISC-V_Core_Modified.png)
 
@@ -18,79 +17,85 @@ Below is the complete architectural block diagram of the RISC-V processor, inclu
 
 ## 🚀 Overview
 
-The RISC-V Core follows a **single-cycle** architecture where each instruction is executed in one clock cycle.
-The design aims to maintain modularity and clarity, making it easier to extend into a pipelined version later.
+The RISC-V core initially followed a **single-cycle architecture**, where each instruction executes in a single clock cycle.  
+It has now been extended into a **5-stage pipelined architecture** (IF → ID → EX → MEM → WB), enabling higher frequency operation and better system performance.
 
 ### **Core Components**
 
-* **Instruction Memory** – stores program instructions in HEX format.
-* **Decode Unit** – decodes the fetched instruction and identifies the operation type.
-* **Register File** – holds 32 general-purpose registers with read/write access.
-* **ALU / Execute Unit** – performs arithmetic and logical operations.
-* **Data Memory** – handles load/store instructions.
-* **Control Unit** – generates control signals based on instruction type.
-* **Branch Control Unit** – evaluates branch conditions and updates PC.
-* **Program Counter (PC) Register** – keeps track of the current instruction address.
+- **Instruction Memory**
+- **Decode Unit**
+- **Register File** – 32 registers (x0–x31)
+- **ALU / Execute Unit**
+- **Data Memory**
+- **Control Unit**
+- **Branch Control Unit**
+- **Pipeline Registers**
+- **Direct-Mapped Instruction Cache**
+- **Direct-Mapped Data Cache**
+- **Program Counter Register**
 
 ---
 
 ## ✅ Current Progress
 
-* ✔️ **Baseline Core Ready**  
-  Designed and verified a fully functional single-cycle RISC-V processor implementing all RV32I base instructions.
+✔️ **Baseline Single-Cycle Core**  
+Fully functional RV32I single-cycle processor supporting all base instructions.
 
-* ✔️ **Functional Verification**  
-  Validated the design using real RISC-V assembly programs, converted to HEX using the **RISC-V toolchain**, and verified correct execution through **Xilinx Vivado** waveform analysis.
+✔️ **Functional Verification**  
+Validated using real RISC-V assembly programs converted to HEX files via the official RISC-V toolchain.  
+Waveforms analyzed in Xilinx Vivado confirm correct execution of all instructions.
 
-* ✔️ **Synthesis & Timing Analysis**  
-  * Developed a custom **TCL script** to run synthesis and automatically check for unintended latches — none were found.  
-  * Analyzed the timing reports for both the pipelined and non-pipelined cores.  
-The pipelined CPU shows a **slowest arrival time of 3.47 ns**, while the single-cycle core reports a **slowest arrival time of 1.73 ns**.  
-However, the critical path in the single-cycle design was observed **between the same register**, indicating that the reported value reflects an unconstrained or unrealistic path due to the nature of single-cycle timing rather than an actual improvement over the pipelined architecture.
+✔️ **Synthesis & Timing Analysis**  
+- Developed a custom TCL script for automated synthesis and latch detection (none detected).  
+- Pipelined version: **3.47 ns** slowest arrival time.  
+- Single-cycle version: **1.73 ns**, but includes unrealistic reg-to-reg paths due to single-cycle timing constraints.
 
+✔️ **Extended to 5-Stage Pipelined CPU**  
+Successfully implemented all pipeline stages (IF, ID, EX, MEM, WB) with modular pipeline registers.
 
-* ✔️ **Extended to 5-Stage Pipelined CPU**  
-  Converted the single-cycle architecture into a **5-stage pipelined CPU** (IF → ID → EX → MEM → WB), significantly reducing the critical path and enabling higher frequency scaling.
+✔️ **Direct-Mapped Instruction Cache**  
+Integrated between the CPU and instruction memory to reduce fetch latency and support future memory hierarchies.
 
-* ✔️ **Direct-Mapped Instruction Cache Implemented**  
-  Added a **direct-mapped instruction cache** between the CPU and Instruction Memory to reduce fetch latency and prepare the design for future SoC-level memory hierarchies.
+✔️ **Designed and Integrated the Data Cache**  
+Implemented a direct-mapped data cache with support for both read and write operations.  
+Also implemented write-through, no-write-allocate policy for predictable behavior.
 
+✔️ **Full Memory Subsystem Integration**  
+Instruction cache, data cache, and backing memory all integrated into a cohesive subsystem connected to the core.
+
+✔️ **Verification with Python-Generated Custom Tests**  
+Developed a Python script generating random and directed RISC-V instruction sequences to thoroughly test pipeline and cache behavior.
+
+✔️ **Pipeline Stall Logic Implemented (Cache Busy Handling)**  
+Added cache-aware stall logic:  
+- Pipeline freezes when data cache is busy or on a cache miss.  
+- Ensures correct execution ordering between MEM and WB stages.
+
+✔️ **Complete Timing Analysis of Core + Caches**  
+Analyzed timing across cached and non-cached versions to quantify the effect of memory hierarchy on critical paths.
 
 ---
 
 ## 🧩 Next Steps
 
-* 🔄 **Integrate the Pipeline**
-  Fully integrate the already implemented **5-stage pipelined CPU** with proper handling of:
-  
-  * Hazard Detection Unit  
-  * Forwarding/Bypass logic  
-  * Pipeline stall control for load-use and cache-miss scenarios  
-  * Improved timing and throughput
+🔄 **Hazard Handling**
+- Forwarding/bypass logic  
+- Hazard detection unit  
+- Resolving data & control hazards
 
-* 📦 **Implement Direct-Mapped Data Cache**
-  Extend the memory hierarchy by designing a **direct-mapped data cache** for the MEM stage to accelerate load/store operations.
+📈 **Performance Measurement**
+- IPC measurement  
+- Hit/miss rate tracking  
+- Memory latency impact  
+- Max frequency comparison between cached & non-cached systems
 
-* ⏸️ **Pipeline Stall Logic for Cache Misses**
-  Introduce a stall mechanism to maintain pipeline correctness during cache misses:
-  
-  * Freeze IF, ID, and EX stages  
-  * Allow MEM/WB to complete  
-  * Maintain correct ordering and forwarding
-
-* 📈 **System Performance Analysis**
-  Analyze full-system behavior after adding caches:
-  
-  * IPC (Instructions Per Cycle)  
-  * Cache hit/miss rate  
-  * Memory latency improvements  
-  * Impact on maximum frequency
+🧹 **Clean Codebase & Documentation**
+- Add SystemVerilog package + typedef cleanup  
+- Improve modularity in memory subsystem
 
 ---
 
 ## 📊 Output Waveform
-
-Below is the simulation waveform showing correct execution of RISC-V instructions:
 
 ![RISC-V Core Output Waveform](Yarp_RISC-V_Waveform.png)
 
@@ -102,6 +107,8 @@ Below is the simulation waveform showing correct execution of RISC-V instruction
 | ---------------- | -------------------------------- |
 | **HDL**          | SystemVerilog                    |
 | **Simulation**   | Xilinx Vivado                    |
-| **Synthesis**    | Synopsys DC                      |
+| **Synthesis**    | Synopsys Design Compiler         |
 | **ISA**          | RISC-V (RV32I)                   |
-| **Verification** | RISC-V Assembly → HEX conversion |
+| **Verification** | Assembly → HEX toolchain, Python |
+
+---
