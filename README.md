@@ -58,10 +58,10 @@ Integrated between the CPU and instruction memory to reduce fetch latency and su
 
 ✔️ **Designed and Integrated the Data Cache**  
 Implemented a direct-mapped data cache with support for both read and write operations.  
-Also implemented write-through, no-write-allocate policy for predictable behavior.
+Designed the cache using a write-through and no-write-allocate policy.
 
 ✔️ **Full Memory Subsystem Integration**  
-Instruction cache, data cache, and backing memory all integrated into a cohesive subsystem connected to the core.
+Instruction cache, data cache, and both instruction and data memory, all integrated into a subsystem connected to the core.
 
 ✔️ **Verification with Python-Generated Custom Tests**  
 Developed a Python script generating random and directed RISC-V instruction sequences to thoroughly test pipeline and cache behavior.
@@ -75,6 +75,9 @@ Added cache-aware stall logic:
 
 ## 🧩 Next Steps
 
+🔄 **Complete Timing Analysis of Core + Caches**  
+- Analyzed timing across cached and non-cached versions to quantify the effect of memory hierarchy on critical paths.
+  
 🔄 **Hazard Handling**
 - Forwarding/bypass logic  
 - Hazard detection unit  
@@ -85,14 +88,6 @@ Added cache-aware stall logic:
 - Hit/miss rate tracking  
 - Memory latency impact  
 - Max frequency comparison between cached & non-cached systems
-
-🧹 **Clean Codebase & Documentation**
-- Add SystemVerilog package + typedef cleanup  
-- Improve modularity in memory subsystem
-
-🔄 **Complete Timing Analysis of Core + Caches**  
-- Analyzed timing across cached and non-cached versions to quantify the effect of memory hierarchy on critical paths.
-
 ---
 
 ## 📊 Output Waveform
