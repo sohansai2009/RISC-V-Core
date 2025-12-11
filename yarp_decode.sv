@@ -14,26 +14,27 @@
 // information about the instruction in the same cycle
 // --------------------------------------------------------
 
-
-//imp-> decode unit, controller module and reg_file will be executed within the same cycle
 module yarp_decode import yarp_pkg::*; (
   input logic clk,
   input logic reset_n,
+  input logic [31:0] pc_addr, //from if_id pipeline
   input   logic [31:0]  instr_i,
-  output  logic [4:0]   rs1_o,//will go to reg file, so no need to pipeline 
-  output  logic [4:0]   rs2_o,//will go to reg file 
-  output  logic [4:0]   rd_o, //will go to reg file
-  output  logic [6:0]   op_o, //will go to controller
-  output  logic [2:0]   funct3_o,//will go to controller
-  output  logic [6:0]   funct7_o, //will go to controller
-  output  logic         r_type_instr_o, //will go to controller
-  output  logic         i_type_instr_o, //will go to controller
-  output  logic         s_type_instr_o, //will go to controller
-  output  logic         b_type_instr_o, //will go to controller
-  output  logic         u_type_instr_o, //will go to controller
-  output  logic         j_type_instr_o, //will go to controller
-  output  logic [31:0]  instr_imm_o, //will go to alu, or be written to reg file(after few cycles), so need to flop only this 
-  input logic decode_d_cache_busy
+  output  logic [4:0]   rs1_o,
+  output  logic [4:0]   rs2_o,
+  output  logic [4:0]   rd_o,
+  output  logic [6:0]   op_o,
+  output  logic [2:0]   funct3_o,
+  output  logic [6:0]   funct7_o,
+  output  logic         r_type_instr_o,
+  output  logic         i_type_instr_o,
+  output  logic         s_type_instr_o,
+  output  logic         b_type_instr_o,
+  output  logic         u_type_instr_o,
+  output  logic         j_type_instr_o,
+  output logic is_l_type, //for detecting a stall/hazard
+  output  logic [31:0]  instr_imm_o,
+  output logic [31:0] next_pc_seq, //for j-type, this has to be written into rd
+  output logic [31:0] instr_o
 );
   
   // Write your logic here...
@@ -46,21 +47,23 @@ module yarp_decode import yarp_pkg::*; (
   
   
   //assign the value for source and dest reg
-  
+  assign instr_o=instr_i;
   assign op_code=instr_i[6:0];
+  assign op_o=op_code;
   assign rs1=instr_i[19:15];
   assign rs2=instr_i[24:20];
   assign rd=instr_i[11:7];
   //values for funct3 and funct7
   assign funct3=instr_i[14:12];
   assign funct7=instr_i[31:25];
-  
-  assign rs1_o=rs1;
+
+   assign rs1_o=rs1;
   assign rs2_o=rs2;
   assign rd_o=rd;
-  assign op_o=op_code;
+  //values for funct3 and funct7
   assign funct3_o=funct3;
   assign funct7_o=funct7;
+  assign is_l_type = (op_code==7'b0000011) ? 1 : 0;
   
   
   //define immediate values(these should also be 32 bits)
@@ -116,16 +119,6 @@ module yarp_decode import yarp_pkg::*; (
     endcase
   end
   
-  
-  assign r_type_instr_o=r_type_decode;
-  assign i_type_instr_o=i_type_decode;
-  assign s_type_instr_o=s_type_decode;
-  assign b_type_instr_o=b_type_decode;
-  assign u_type_instr_o=u_type_decode;
-  assign j_type_instr_o=j_type_decode;
-
-
-  
   //when to pass the immediate value (only when r type instr not requested)
 
   logic [31:0] imm;
@@ -135,22 +128,13 @@ module yarp_decode import yarp_pkg::*; (
     (b_type_decode)?imm_b:
     (u_type_decode)?imm_u:
     (j_type_decode)?imm_j: 0;
-
-
-  always_ff @(posedge clk)
-  begin
-  if(!reset_n)
-  begin
-  instr_imm_o<=0;
-  end
-  else if(!decode_d_cache_busy) //if no stall, send the correct imm value
-  begin
-  instr_imm_o<=imm;
-  end
-  else if(decode_d_cache_busy)
-  begin
-  instr_imm_o<=instr_imm_o; //if stall, restore the prev value
-  end
-  end
   
+  assign r_type_instr_o=r_type_decode;
+  assign i_type_instr_o=i_type_decode;
+  assign s_type_instr_o=s_type_decode;
+  assign b_type_instr_o=b_type_decode;
+  assign u_type_instr_o=u_type_decode;
+  assign j_type_instr_o=j_type_decode;
+  assign instr_imm_o=imm;
+  assign next_pc_seq=(j_type_decode)?pc_addr+4'h4 : 0; 
 endmodule
