@@ -10,6 +10,9 @@
 // Yet Another RISC-V Processor - Top
 // --------------------------------------------------------
 
+
+
+
 module yarp_top import yarp_pkg::*; #(
   parameter RESET_PC = 32'h1000
 )(
@@ -20,15 +23,16 @@ module yarp_top import yarp_pkg::*; #(
   output  logic          instr_mem_req_o,
   output  logic [31:0]   instr_mem_addr_o,
   input   logic [31:0]   instr_mem_rd_data_i,
-  output logic [8:0] retire_count
+  output logic [8:0] retire_count,
+  output logic retire_done
 
 
 );
 
   //define all the internal registers
   logic [31:0] alu_op1;
-  logic [31:0] imem_dec_instr1;
-  logic reset_q; //flop to store the first reset
+  //logic [31:0] imem_dec_instr1;
+  //logic reset_q; //flop to store the first reset
   logic [31:0] pc_q,next_pc,next_pc_seq;
   logic [4:0] dec_rf_rs1;
   logic [4:0] dec_rf_rs2;
@@ -44,7 +48,7 @@ module yarp_top import yarp_pkg::*; #(
   logic dec_ctrl_j;
   logic [31:0] dec_imm;
   logic [31:0] rf_rs1_data,rf_rs2_data;
-  logic [31:0] data_mem_rd_data;
+  //logic [31:0] data_mem_rd_data;
   logic ctrl_pc_sel;
   logic ctrl_op1_sel;
   logic ctrl_op2_sel;
@@ -77,7 +81,7 @@ module yarp_top import yarp_pkg::*; #(
   logic [1:0] id_ex_mem_data_type;
   logic id_ex_mem_req;
   logic [1:0] id_ex_rf_wr_data;
-  logic [31:0] id_ex_alu_func_o;
+  logic [3:0] id_ex_alu_func_o;
   logic id_ex_op1_sel;
   logic id_ex_op2_sel;
   logic [4:0] id_ex_rd_addr_out;
@@ -123,7 +127,7 @@ module yarp_top import yarp_pkg::*; #(
   //hazard detection signals
   logic hazard_l_type;
   logic mem_l_type;
-  logic [31:0] ex_a_in,ex_b_in;
+  //logic [31:0] ex_a_in,ex_b_in;
   logic [5:0] rs1_l_dep_id_ex_in,rs2_l_dep_id_ex_in;
   logic id_ex_rs1_l_dep_out, id_ex_rs2_l_dep_out;
   logic forward_mem_wb_rs1, forward_mem_wb_rs2;
@@ -152,30 +156,32 @@ module yarp_top import yarp_pkg::*; #(
 
   logic retire_rf;
   logic [31:0] reg_file_data_in;
-  logic retire_done;
+  //logic retire_done;
   
   logic [4:0] hazard_rd;
   logic [31:0] write_txt_reg_file_in [31:0];
   logic write_per;
   
+
+  logic [31:0] j_addr;
   
-  always_ff @(posedge clk or negedge reset_n)
+  /*always_ff @(posedge clk or negedge reset_n)
     begin
       if(!reset_n)
         reset_q <= 0;
       else
         reset_q <= 1;
-    end
+    end*/
   
   //value for seq_pc
   assign next_pc_seq=pc_q+32'h4;
   assign next_pc = hazard_detect ? pc_q : (ctrl_pc_sel | b_branch_taken)?{alu_op1[31:1],1'b0}:next_pc_seq;  //if hazard detected, we should not increment pc, if branch_taken, go to target address calculated by alu else go to next_pc loc
   
-  always_ff @(posedge clk or negedge reset_n)
+  always_ff @(posedge clk)
     begin
       if(!reset_n)
         pc_q <= RESET_PC;
-      else if(reset_n) //if first reset is captured, update the  value
+      else 
         pc_q<=next_pc;
     end
   // --------------------------------------------------------
@@ -188,11 +194,13 @@ module yarp_top import yarp_pkg::*; #(
     .instr_mem_req_o          (instr_mem_req_o),
     .instr_mem_addr_o         (instr_mem_addr_o), //pc output address (will go into the 
     .mem_rd_data_i            (instr_mem_rd_data_i),
-    .instr_mem_instr_o        (instr_if_id)  //instruction which goes to the decode stage
+    .instr_mem_instr_o        (instr_if_id),  //instruction which goes to the decode stage
+    .pc_addr_out              (j_addr)
   );
 
 
   // IF/ID Pipeline
+  logic if_id_instr_valid;
   if_id_pipeline u_yarp_if_id (
    .clk (clk),
    .reset_n(reset_n),
@@ -200,7 +208,8 @@ module yarp_top import yarp_pkg::*; #(
    .if_pc_in (instr_mem_addr_o),
    .id_instr_out (id_instr_i),
    .id_pc_out (id_pc_in),
-   .if_pip_disable (hazard_detect) );
+   .if_pip_disable (hazard_detect),
+   .if_id_valid (if_id_instr_valid) );
 
 
   
@@ -208,11 +217,13 @@ module yarp_top import yarp_pkg::*; #(
   // --------------------------------------------------------
   // Instruction Decode
   // --------------------------------------------------------
+  logic dec_instr_valid;
   yarp_decode u_yarp_decode (
     .clk                      (clk),
     .reset_n                  (reset_n),
     .pc_addr                  (id_pc_in),//from if/id pipeline
     .instr_i                  (id_instr_i), //coming from pipeline
+    .id_valid_in              (if_id_instr_valid),
     .rs1_o                    (dec_rf_rs1), //decode -> rf(we will take the data present at the rs1 loc in rf
     .rs2_o                    (dec_rf_rs2),
     .rd_o                     (dec_rf_rd),
@@ -228,7 +239,8 @@ module yarp_top import yarp_pkg::*; #(
     .is_l_type (l_type),
     .instr_imm_o              (dec_imm),
     .next_pc_seq (dec_pc), //for j type
-    .instr_o (id_ex_instr_in)
+    .instr_o (id_ex_instr_in),
+    .decode_valid (dec_instr_valid)
   );
 
   // --------------------------------------------------------
@@ -266,6 +278,8 @@ module yarp_top import yarp_pkg::*; #(
     .alu_func_o               (ctrl_alu_func)
   );
 
+  logic id_ex_instr_valid_out;
+  logic id_ex_instr_valid_in;
   id_ex_pipeline u_yarp_id_ex_pipeline(
   .clk (clk),
   .reset_n (reset_n),
@@ -278,6 +292,7 @@ module yarp_top import yarp_pkg::*; #(
   .rd_addr (dec_rf_rd),
   .ctrl_data_wr (ctrl_data_wr),
   .ctrl_zero_extnd (ctrl_zero_extnd),
+  .id_ex_instr_valid_in (id_ex_instr_valid_in),
   .ctrl_rf_wr_en (ctrl_wr_en),
   .rf_rs1_data(rf_rs1_data), //reg_file values, read during ID stage
   .rf_rs2_data(rf_rs2_data),
@@ -322,7 +337,8 @@ module yarp_top import yarp_pkg::*; #(
   .forward_rs1_ex_mem(forward_rs1_ex_dep_id_ex),
   .forward_rs1_mem_wb(forward_rs1_mem_dep_id_ex),
   .forward_rs2_ex_mem(forward_rs2_ex_dep_id_ex),
-  .forward_rs2_mem_wb(forward_rs2_mem_dep_id_ex)); 
+  .forward_rs2_mem_wb(forward_rs2_mem_dep_id_ex),
+  .id_ex_instr_valid_out(id_ex_instr_valid_out)); 
   
   
   // --------------------------------------------------------
@@ -348,6 +364,7 @@ logic forward_ex_mem_rs1, forward_ex_mem_rs2;*/
   
   assign opr_b_sel=(id_ex_op2_sel)?id_ex_imm: (ex_decide_rs2_l_dep)?rf_data_in: (forward_rs2_mem_dep_id_ex)? mem_wb_alu_op : (forward_rs2_ex_dep_id_ex) ? execute_o : id_ex_rs2_data; //if rs2 is load depende,t we forward the data from mem/wb pipeline to the execute input, this will prevent any sort of setup violation
 
+  logic ex_mem_instr_valid_in;
   yarp_execute u_yarp_execute (
     .clk                      (clk),
     .reset_n                  (reset_n), 
@@ -360,6 +377,7 @@ logic forward_ex_mem_rs1, forward_ex_mem_rs2;*/
     .mem_data_type (id_ex_mem_data_type),
     .mem_data_wr (id_ex_mem_data_wr),
     .mem_zero_extnd (id_ex_mem_zero_extnd),
+    .ex_instr_valid_in (id_ex_instr_valid_out),
     .wb_rf_wr_en (id_ex_rf_wr_en),
     .imm_in (id_ex_imm),
     .pc_in (id_ex_pc),
@@ -379,10 +397,11 @@ logic forward_ex_mem_rs1, forward_ex_mem_rs2;*/
     .rd_addr_out (ex_mem_rd_addr_in),
     .alu_res_o (alu_op1),
     .ex_mem_rs2_wr_data(ex_mem_rs2_wr_data),
-    .ex_l_type_out (ex_mem_l_type)
+    .ex_l_type_out (ex_mem_l_type),
+    .ex_instr_valid_out (ex_mem_instr_valid_in)
   );
 
-
+logic mem_instr_valid_in;
   ex_mem_pipeline u_yarp_ex_mem_pipeline(
   .clk (clk),
   .reset_n (reset_n),
@@ -394,6 +413,7 @@ logic forward_ex_mem_rs1, forward_ex_mem_rs2;*/
   .mem_data_wr (ex_mem_data_wr),
   .mem_zero_extnd (ex_mem_zero_extnd),
   .wb_rf_wr_en (ex_mem_wb_rf_wr_en),
+  .ex_mem_instr_valid_in(ex_mem_instr_valid_in),
   .ex_mem_en (1'b1), //pipeline enable signal
   .imm_dec_in (ex_mem_imm),
   .pc_ex (ex_mem_pc),
@@ -412,7 +432,8 @@ logic forward_ex_mem_rs1, forward_ex_mem_rs2;*/
   .pc_mem (mem_pc_in) ,
   .ex_rd_addr_out (ex_mem_rd_addr),
    .mem_wr_data (mem_wr_data),
-   .ex_mem_l_type_out (mem_l_type_in));
+   .ex_mem_l_type_out (mem_l_type_in),
+   .ex_mem_instr_valid_out(mem_instr_valid_in));
   
 assign hazard_l_type = !(reset_n)?0 : (ex_mem_l_type);
  hazard_detection u_yarp_hazard_detection (
@@ -427,6 +448,7 @@ assign hazard_l_type = !(reset_n)?0 : (ex_mem_l_type);
  .hazard_rs1_dep_l_in (ex_rs1_l_dep_in),
  .hazard_rs2_dep_l_in (ex_rs2_l_dep_in),
  .hazard (hazard_detect),
+ .hdu_instr_valid_in(dec_instr_valid),
  .id_ex_rs1_l_dep (rs1_l_dep_id_ex_in),
  .id_ex_rs2_l_dep (rs2_l_dep_id_ex_in),
  .rs1_l_dep_ex_in(id_ex_rs1_l_dep_out),
@@ -434,9 +456,11 @@ assign hazard_l_type = !(reset_n)?0 : (ex_mem_l_type);
  .rs1_mem_dep_o (forward_mem_wb_rs1),
  .rs1_ex_dep_o (forward_ex_mem_rs1),
  .rs2_ex_dep_o (forward_ex_mem_rs2),
- .rs2_mem_dep_o (forward_mem_wb_rs2)
+ .rs2_mem_dep_o (forward_mem_wb_rs2),
+ .hdu_instr_valid_out (id_ex_instr_valid_in) //goes as input to the id_ex pipeline
  );
-
+  
+  logic mem_wb_instr_valid_in;
   data_mem u_yarp_data_mem (
   .clk (clk),
   .reset_n (reset_n),
@@ -447,6 +471,7 @@ assign hazard_l_type = !(reset_n)?0 : (ex_mem_l_type);
   .mem_data_type (mem_data_type),
   .mem_data_wr (mem_data_wr),
   .mem_zero_extnd (mem_zero_extnd),
+  .mem_instr_valid_in (mem_instr_valid_in),
   .wb_rf_wr_en (mem_wb_rf_wr_en),
   .imm_dec_in (mem_imm_in),
   .pc_in (mem_pc_in),
@@ -460,10 +485,11 @@ assign hazard_l_type = !(reset_n)?0 : (ex_mem_l_type);
   .imm_dec_o (mem_wb_imm),
   .pc_o (mem_wb_pc),
   .mem_data_out (mem_wb_data), //output of load operations
-  .mem_comp_out (mem__wb_comp),
+  .mem_comp_out (mem_wb_comp),
   .ex_out (mem_wb_ex_res) , //wb_result
   .mem_rd_addr_out (mem_rd_addr_out),
-   .mem_wb_l_type_out (mem_l_type));
+   .mem_wb_l_type_out (mem_l_type),
+   .mem_instr_valid_out (mem_wb_instr_valid_in));
 
 
   /*yarp_regfile u_yarp_regfile (
@@ -485,6 +511,7 @@ assign hazard_l_type = !(reset_n)?0 : (ex_mem_l_type);
   .mem_data (mem_wb_data),
   .mem_rf_wr_en (mem_wb_rf_wr_en_in),
   .mem_rf_wr_data (mem_wb_rf_wr_data_in), //decided which data to write to reg_file
+  .mem_wb_instr_valid_in(mem_wb_instr_valid_in),
   .ex_result_in (mem_wb_ex_res),
   .imm_in (mem_wb_imm),
   .pc_mem (mem_wb_pc),
@@ -510,8 +537,8 @@ assign hazard_l_type = !(reset_n)?0 : (ex_mem_l_type);
     .clk                      (clk),
     .reset_n                  (reset_n),
     .instr_fetch_i (instr_if_id),
-    .rs1_addr_i               (dec_rf_rs1),
-    .rs2_addr_i               (dec_rf_rs2),
+    .rs1_addr_i               (ex_rs1_in),
+    .rs2_addr_i               (ex_rs2_in),
     .rd_addr_i                (rf_rd_addr_in), //the rd_address has to come from the wb pipeline, as it is used during the wb stage
     .wr_en_i                  (rf_wr_en), //this is the write back signal, so it has to come from the mem/wb pipeline
     .wr_data_i                (reg_file_data_in), //this is the write back signal, so it has to come from the mem/wb pipeline
@@ -520,13 +547,13 @@ assign hazard_l_type = !(reset_n)?0 : (ex_mem_l_type);
     .rs1_data_o               (rf_rs1_data),
     .rs2_data_o               (rf_rs2_data),
     .wb_rd (hazard_rd),
-    .regfile_out (write_txt_reg_file_in),
-    .write_to_text (write_per)
+    .regfile_out (write_txt_reg_file_in)
+    //.write_to_text (write_per)
   );
 
-  reg_file_capture u_yarp_reg_file_capture (
+ /* reg_file_capture u_yarp_reg_file_capture (
   .write_perm (write_per),
-  .regfile(write_txt_reg_file_in));
+  .regfile(write_txt_reg_file_in));*/
   
   always_ff @(posedge clk)
   begin
@@ -540,4 +567,5 @@ assign hazard_l_type = !(reset_n)?0 : (ex_mem_l_type);
 
   
 endmodule
+
 
